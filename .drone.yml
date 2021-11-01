@@ -1,0 +1,33 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+  - name: docker
+    image: plugins/docker
+    settings:
+      username: 100013433790
+      password: Yuxh3318375!
+      repo: ccr.ccs.tencentyun.com/inyaa/inyaa-sakura
+      registry: ccr.ccs.tencentyun.com
+      tags: latest
+  - name: ssh commands
+    pull: if-not-exists
+    image: appleboy/drone-ssh
+    settings:
+      host: 122.51.60.92
+      username: root
+      password:
+        # 从drone仓库配置中秘密空间读取密码
+        from_secret: ssh_password
+      port: 22
+      # 注意把下面的 springboot-helloworld 改成自己项目mvn pkg会生成的jar包名称
+      script:
+        - echo =======暂停容器=======
+        - docker stop $(docker ps -a | grep "inyaa-sakura" | awk '{print $1}')
+        - echo =======暂停旧容器和镜像=======
+        - docker rm -f $(docker ps -a | grep inyaa-sakura | awk '{print $1}')
+        - docker rmi $(docker images | grep inyaa-sakura | awk '{print $3}')
+        - echo =======开始部署应用=======
+        - docker run -d -p 5000:5000 --name inyaa-sakura --network inyaa --network-alias inyaa-sakura ccr.ccs.tencentyun.com/inyaa/inyaa-sakura:latest
+        - echo =======部署成功=======
