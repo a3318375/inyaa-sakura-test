@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const { createServer: createViteServer } = require('vite');
-const Logger = require('./src/utils/logger').Logger;
+const {createServer: createViteServer} = require('vite');
+
 async function createServer() {
     const app = express();
     const vite = await createViteServer({
-        server: { middlewareMode: 'ssr' }
+        server: {middlewareMode: 'ssr'}
     });
 
     app.use(vite.middlewares);
@@ -23,31 +23,22 @@ async function createServer() {
             template = await vite.transformIndexHtml(url, template);
 
             // 3. Load the server entry. vite.ssrLoadModule
-            const { render } = await vite.ssrLoadModule('/src/entry-server.js');
+            const {render} = await vite.ssrLoadModule('/src/entry-server.js');
             // 4. render the app HTML.
-            const { appHtml, state, preloadLinks } = await render(url, {});
+            const {appHtml, state, preloadLinks} = await render(url, {});
 
             // 5. Inject the app-rendered HTML into the template.
-            Logger.info(url)
-            // 新加 + 将服务端预取数据的store，插入html模板文件
-            if (state.postInfo.title) {
-                template = template
-                    .replace('<!--meta-title-->', state.postInfo.title)
-                    .replace('<!--meta-keywords-->', '<meta name="keywords" content="' + state.postInfo.title + '" />')
-                    .replace('<!--meta-description-->', '<meta name="description" content="' + state.postInfo.summary + '" />')
-            } else {
-                template = template
-                    .replace('<!--meta-title-->', '瑶瑶的梦中小屋')
-                    .replace('<!--meta-keywords-->', '<meta name="keywords" content="瑶瑶的梦中小屋" />')
-                    .replace('<!--meta-description-->', '<meta name="description" content="瑶瑶的梦中小屋,一个个人兴趣小站" />')
+            template = template
+                .replace('<!--meta-title-->', '瑶瑶的梦中小屋')
+                .replace('<!--meta-keywords-->', '<meta name="keywords" content="瑶瑶的梦中小屋" />')
+                .replace('<!--meta-description-->', '<meta name="description" content="瑶瑶的梦中小屋,一个个人兴趣小站" />')
 
-            }
             const html = template
                 .replace(`<!--preload-links-->`, preloadLinks)
                 .replace(`<!--app-html-->`, appHtml)
                 .replace(`'<!--vuex-state-->'`, JSON.stringify(state))
             // 6. Send the rendered HTML back.
-            res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+            res.status(200).set({'Content-Type': 'text/html'}).end(html);
         } catch (e) {
             // If an error is caught,
             vite.ssrFixStacktrace(e);

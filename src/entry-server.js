@@ -5,6 +5,7 @@ import { renderToString } from '@vue/server-renderer';
 import {createStore} from './store';
 import {createRouter} from './router';
 import { sync } from 'vuex-router-sync';
+import Antd from 'ant-design-vue';
 
 export async function render(url, manifest) {
     const router = createRouter();
@@ -13,10 +14,7 @@ export async function render(url, manifest) {
 
     const app = createSSRApp(App);
     app.use(router).use(store);
-
-    await store.dispatch('getBackImgUrl');
-    await store.dispatch('getConfigInfo');
-    await store.dispatch('findMenuList');
+    app.use(Antd);
 
     router.push(url);
     await router.isReady();
